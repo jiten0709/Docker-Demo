@@ -22,8 +22,18 @@ const authenticate: RequestHandler = (req, res, next) => {
     AppErrorCode.InvalidAccessToken
   );
 
-  req.userId = payload.userId;
-  req.sessionId = payload.sessionId;
+  // Define the expected payload type
+  type JwtPayload = {
+    userId: string;
+    sessionId: import("mongodb").ObjectId;
+    [key: string]: any;
+  };
+
+  const typedPayload = payload as JwtPayload;
+
+  const { ObjectId } = require("mongodb");
+  req.userId = new ObjectId(typedPayload.userId);
+  req.sessionId = typedPayload.sessionId;
   next();
 };
 

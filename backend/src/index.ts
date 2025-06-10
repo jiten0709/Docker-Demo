@@ -41,6 +41,6 @@ app.use("/sessions", authenticate, sessionRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, async () => {
-  console.log(`Server listening on port ${PORT} in ${NODE_ENV} environment`);
+  console.log(`Server listening on port http://localhost:${PORT} in ${NODE_ENV} environment`);
   await connectToDatabase();
 });
