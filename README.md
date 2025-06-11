@@ -1,131 +1,97 @@
-# MERN Authentication Template (JWT)
+# MERN Docker Demo
 
-This is a starter template for a MERN stack application using JSON Web Tokens (JWT). The backend is built with [TypeScript](https://www.typescriptlang.org/), [Express](https://expressjs.com), [MongoDB](https://www.mongodb.com) and [Resend](https://resend.com) (for sending emails). There is also a Postman collection for testing the API. JWTs are stored in secure, HTTP-only cookies. The frontend is built with [React](https://react.dev), [Chakra UI](https://chakra-ui.com) and [React Query](https://tanstack.com/query/latest).
+## Prerequisites
 
-Includes:
+Before you begin, ensure you have the following installed:
 
-- register, login, logout, profile, account verification, password reset
-- send emails for account verification and password reset
-- get and remove sessions
-- frontend forms for login, register, reset password, etc.
-- custom react hooks to manage auth state & application data
+- [Docker](https://www.docker.com/get-started/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-<img src="preview.jpg" />
+## Setup Instructions
 
-## API Architecture
+1.  **Clone the repository:**
 
-The API is built using different layers: routes, controllers, services and models.
+    ```bash
+    git clone https://github.com/jiten0709/Docker-Demo.git
+    cd Docker-Demo
+    ```
 
-- Routes are responsible for handling the incoming requests and forwarding them to the appropriate controller.
-- Controllers are responsible for validating the request, calling the appropriate service, and sending back the response.
-- Services are responsible for handling the business logic. They interact with the database and any external services. Services may also call other services.
-- Models are responsible for interacting with the database. They contain the schema and any model utility methods.
+2.  **Switch to the `docker-app` branch:**
 
-\*\*\* For simple GET or DELETE requests that don't require any business logic, the controller may directly interact with the model.
+    ```bash
+    git switch docker-app
+    ```
 
-#### Error Handling
+3.  **Create `.env` files:**
 
-Errors are handled using a custom error handler middleware. The error handler middleware catches all errors that occur in the application and processes them accordingly. Each controller needs to be wrapped with the `errorCatch()` utility function to ensure that any errors that are thrown within the controller are caught and passed on to the error handler middleware.
+    Create `.env` files for both the `backend` and `frontend` directories. Use the `sample.env` files as a reference.
 
-## Authentication Flow
+    ```bash
+    # Backend
+    cd backend
+    cp sample.env .env.docker
+    # Edit .env.docker with appropriate values, especially MONGO_URI
+    cd ..
 
-When a user logs in, the server will generate two JWTs: `AccessToken` and `RefreshToken`. Both JWTs are sent back to the client in secure, HTTP-only cookies. The AccessToken is short-lived (15 minutes) and is passed on EVERY request to authenticate the user. The RefreshToken is long-lived (30 days) and is ONLY sent to the `/refresh` endpoint. This endpoint is used to generate a new AccessToken, which will then be passed on subsequent requests.
+    # Frontend
+    cd frontend
+    cp sample.env .env.docker
+    # Edit .env.docker with appropriate values, especially VITE_API_URL
+    cd ..
+    ```
 
-The frontend has logic that checks for `401 AccessTokenExpired` errors. When this error occurs, the frontend will send a request to the `/refresh` endpoint to get a new AccessToken. If that returns a 200 (meaning a new AccessToken was issued), then the client will retry the original request. This gives the user a seamless experience without having to log in again. If the `/refresh` endpoint errors, the user will be logged out and redirected to the login page.
+4.  **Run the application using Docker Compose:**
 
-<img src="./jwt-auth-flow.jpg" />
+    ```bash
+    docker compose up --build
+    ```
 
-## Run Locally
+    This command builds the Docker images and starts the containers.
 
-To get started, you need to have [Node.js](https://nodejs.org/en) installed. You also need to have MongoDB installed locally ([download here](https://www.mongodb.com/docs/manual/installation/)), or you can use a cloud service like [MongoDB Atlas](https://www.mongodb.com/atlas/database). You will also need to create a [Resend](https://resend.com) account to send emails.
+5.  **Access the application:**
 
-Clone the project
+    Once the containers are running, access the application through your browser. Refer to your `Caddyfile` for the correct URLs. By default:
 
-```bash
-git clone https://github.com/nikitapryymak/mern-auth-jwt.git
-```
+    - Frontend: `https://auth.localhost`
+    - API: `https://api.auth.localhost`
 
-Go to the project directory
+## Additional Setup
 
-```bash
-cd mern-auth-jwt
-```
+Before accessing the application, you need to configure your `/etc/hosts` file to map `auth.localhost` and `api.auth.localhost` to your local machine.
 
-Navigate to the backend directory
+1.  **Edit your `/etc/hosts` file:**
 
-```bash
-cd backend
-```
+    ```bash
+    sudo nano /etc/hosts
+    ```
 
-Use the right node version (using [nvm](https://github.com/nvm-sh/nvm))
+2.  **Add the following lines to the end of the file:**
 
-```bash
-nvm use
-```
+    ```
+    127.0.0.1 auth.localhost
+    127.0.0.1 api.auth.localhost
+    ```
 
-Install Backend dependencies
+3.  **Save the file and exit.** (In `nano`, press `Ctrl+X`, then `Y`, then `Enter`)
 
-```bash
-npm install
-```
+This step is necessary for your browser to correctly resolve the `auth.localhost` and `api.auth.localhost` domains to your local machine, allowing you to access the frontend and API through Caddy.
 
-Before running the server, you need to add your ENV variables. Create a `.env` file and use the `sample.env` file as a reference.
-For development, you can set the `EMAIL_SENDER` to a random string, since the emails are sent with a resend sandbox account (when running locally).
+4. **Keychain access**
 
-```bash
-cp sample.env .env
-# open .env and add your variables
-```
+Open Keychain Access - Download the certificate from the `docker-demo-caddy-1` container located at `/data/caddy/pki/authorities/local/root.crt`. You can copy the file out of the container using `docker cp docker-demo-caddy-1:/data/caddy/pki/authorities/local/root.crt .` - Import the certificate into Keychain Access and set it to "Always Trust"
 
-Start the MongoDB server (if running locally)
+## Additional Commands
 
-```bash
-# using homebrew
-brew services start mongodb-community@7.0
-```
+- **To stop the containers:**
 
-Start the API server
+  ```bash
+  docker compose down
+  ```
 
-```bash
-# runs on http://localhost:4004 (default)
-npm run dev
-```
+- **To view the logs:**
 
-Navigate to the frontend directory & install dependencies
+  ```bash
+  docker compose logs -f <service_name>
+  ```
 
-```bash
-cd ../frontend
-npm install
-```
-
-Create a `.env` file at the root and add the `VITE_API_URL`. This is the URL of the backend API.
-
-```bash
-VITE_API_URL=http://localhost:4004
-```
-
-Start the dev server
-
-```bash
-# runs on http://localhost:5173
-  npm run dev
-```
-
-### Postman Collection
-
-There is a Postman collection in the `backend` directory that you can use to test the API. The `postman.json` contains requests for all the routes in the API. You can [import the JSON directly](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-data/#import-postman-data) into Postman.
-
-## 🛠️ Build
-
-To build either the frontend or backend, run the following command in the respective directory:
-
-```bash
-npm run build
-```
-
-To test the compiled API code, run:
-
-```bash
-# this runs the compiled code in the dist directory
-npm run start
-```
+  Replace `<service_name>` with `api`, `frontend`, `mongo`, or `caddy`.
