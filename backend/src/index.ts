@@ -44,3 +44,8 @@ app.listen(PORT, async () => {
   console.log(`Server listening on port http://localhost:${PORT} in ${NODE_ENV} environment`);
   await connectToDatabase();
 });
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
